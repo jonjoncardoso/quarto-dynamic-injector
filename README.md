@@ -1,224 +1,164 @@
 # Quarto Dynamic Injector
 
-A Quarto extension for dynamically injecting content into websites based on URL paths and hierarchical structures.
+[![Quarto Extension](https://img.shields.io/badge/Quarto-Extension-blue?style=flat&logo=quarto)](https://quarto.org/docs/extensions/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/jonjoncardoso/quarto-dynamic-injector/releases)
 
-## Features
+A Quarto extension that injects HTML content into specific pages based on URL paths. Perfect for adding course-specific branding, archive notices, or contextual content to different sections of your website.
 
-- **Dynamic Content Injection**: Inject figures, CSS, and other content based on URL paths
-- **Hierarchical Mapping**: Map content to specific paths in your website structure
-- **Build-time Injection**: Configuration is automatically injected during Quarto build
-- **No CORS Issues**: Build-time injection eliminates runtime fetch problems
-- **Flexible Configuration**: Easy YAML-based configuration system
+## Author
+
+**Jon Cardoso-Silva** - [@jonjoncardoso](https://github.com/jonjoncardoso)
+
+This extension was developed to solve content injection challenges in multi-section educational websites, particularly for the [DS105 course at LSE](https://lse-dsi.github.io/DS105/).
+
+## Quick Links
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Examples](#examples)
+- [Configuration Options](#configuration-options)
+
+## What It Does
+
+The Dynamic Injector extension lets you automatically add content to specific pages or sections of your Quarto website. This is ideal for:
+
+- **Educational websites** where you want different branding for different terms
+- **Multi-course sites** that need course-specific icons or notices
+- **Archive sections** that need different styling or content
+- **Any website** where you want content to appear only on specific pages
 
 ## Installation
 
-The extension is already installed in this project. To install in other projects:
-
 ```bash
-quarto add joncardoso/quarto-dynamic-injector
+quarto install extension jonjoncardoso/quarto-dynamic-injector@v0.1.0
 ```
 
-## Configuration
+## Usage
 
-### In `_quarto.yml`
+### Basic Setup
+
+Add the filter to your document or `_quarto.yml`:
+
+```yaml
+---
+filters:
+  - quarto-dynamic-injector
+---
+```
+
+### Configuration
+
+Configure what content to inject on different pages:
 
 ```yaml
 filters:
   - quarto-dynamic-injector
 
 quarto-dynamic-injector:
-  excludePaths:
-    - "/slides.qmd"
-    - "/slides"
   contentMapping:
-    "/2024/autumn-term/":
-      imageSrc: "/figures/icons/DS105A_person_icon.jpeg"
-      altText: "DS105 Autumn Term Icon"
-      title: "DS105 Autumn Term Icon"
-      style: "object-fit: cover;width:5em;height:5em;border-radius: 50%;margin-bottom:1em;"
-      className: "autumn-term-figure"
-```
-
-### Configuration Structure
-
-The `contentMapping` key maps URL paths to content configurations. You can specify multiple items of the same type using arrays:
-
-```yaml
-contentMapping:
-  "/path/to/section/":
-    # Single content item
-    class-injection:
-      selector: "body"
-      className: "archive-page"
+    # Add autumn term branding to all autumn term pages
+    "/2024-2025/autumn-term/":
+      figure:
+        - selector: "main > header"
+          position: "afterend"
+          imageSrc: "/figures/icons/autumn-icon.png"
+          altText: "Autumn Term 2024"
+          className: "autumn-term-figure"
     
-    # Multiple figures using array syntax
-    figure:
-      - selector: "main > header"
-        position: "afterend"
-        imageSrc: "path/to/image1.png"
-        altText: "First image"
-        title: "First Image Title"
-        className: "first-figure"
-      - selector: ".navbar-title"
-        position: "afterbegin"
-        imageSrc: "path/to/image2.png"
-        altText: "Second image"
-        title: "Second Image Title"
-        className: "second-figure"
+    # Add winter term branding to all winter term pages
+    "/2024-2025/winter-term/":
+      figure:
+        - selector: "main > header"
+          position: "afterend"
+          imageSrc: "/figures/icons/winter-icon.png"
+          altText: "Winter Term 2024"
+          className: "winter-term-figure"
 ```
 
-### Content Item Configuration
+### Potential Questions:
 
-Each content item supports these properties:
+**Q: How do you know how to specify the `selector`?**
 
-- `selector`: CSS selector for injection target (required)
-- `position`: Injection position relative to target (default: "afterend")
-- `imageSrc`: Image source URL (for figures)
-- `altText`: Image alt text (for figures)
-- `title`: Image title attribute (for figures)
-- `style`: Inline CSS styles (for figures)
-- `className`: CSS class name (for figures and class-injection)
+A: You'll need to inspect the HTML of your rendered HTML page (using your browser's developer tools) to figure out where you want the content to be injected. 
 
-### Path Matching
+**Q: How do you know what to put in the `className`?**
 
-The extension matches the current document's URL path against the configured paths:
+A: You can use any existing CSS class you want that is visible to Quarto webpages. 
 
-- **Exact matches**: `/2024/autumn-term/` matches pages in that section
-- **Partial matches**: `/2023/` matches all pages under 2023
-- **Exclusions**: Use `excludePaths` to skip specific pages or sections
-- **Single match**: Only the first matching path configuration is applied per page
+* By default, Quarto ships with the [Bootstrap](https://getbootstrap.com/) framework and so any [Bootstrap CSS classes](https://www.w3schools.com/bootstrap/bootstrap_ref_all_classes.asp) should work.
+* Any CSS class that is exposed in the [Quarto theme](https://quarto.org/docs/output-formats/html-themes.html) you are using should work.
+* Any CSS class you define yourself in your own [custom theme](https://quarto.org/docs/output-formats/html-themes.html#custom-themes) should work.
 
-### Selector Configuration
+**Q: Can I just pass an inline CSS style definition?**
 
-The `selector` option specifies where to inject content in the HTML document:
+A: Yes, instead of the `className` attribute, you can explicitly define the CSS style you want to apply to the element:
 
-- **Default**: `"main > header"` (injects after the main header)
-- **Custom selectors**: Use any valid CSS selector
-- **Examples**:
-  - `"body > header"` - After the body header
-  - `".sidebar"` - After the sidebar element
-  - `"#content"` - After the content div
-  - `"main"` - After the main element
+  ```yaml
+  figure:
+    - selector: "main > header"
+      position: "afterend"
+      imageSrc: "/figures/icons/autumn-2024.png"
+      altText: "Autumn Term 2024"
+      style: "width: 100px; height: 100px;"
+  ```
 
-### Element Selection Behavior
+## Examples
 
-- **Single element**: Only the first element matching the CSS selector is targeted
-- **Multiple elements**: If multiple elements match the selector, only the first one is used
-- **No elements**: If no elements match the selector, the injection is skipped gracefully
+### University Course Website
 
-### Position Configuration
+Imagine you have an educational website like the [Quarto Template for University Courses](https://github.com/jonjoncardoso/quarto-template-for-university-courses) and want to:
 
-The `position` option specifies where to inject content relative to the target element:
+- Show current term branding prominently
+- Add archive notices to old material
+- Keep course-specific icons visible on relevant pages
 
-- **Default**: `"afterend"` (after the target element)
-- **Available positions**:
-  - `"beforebegin"` - Before the target element
-  - `"afterbegin"` - Inside the target element, at the beginning
-  - `"beforeend"` - Inside the target element, at the end
-  - `"afterend"` - After the target element
-- **Examples**:
-  - `"afterend"` - Content appears after the header
-  - `"beforebegin"` - Content appears before the header
-  - `"afterbegin"` - Content appears at the start of the main element
-  - `"beforeend"` - Content appears at the end of the main element
-
-### ID System
-
-The extension generates unique IDs for injected elements to ensure proper targeting:
-
-- **Format**: `quarto-dynamic-injector-{content-type}-{className}-{index}`
-- **Examples**: 
-  - `quarto-dynamic-injector-figure-term-icon-1`
-  - `quarto-dynamic-injector-figure-sidebar-banner-2`
-- **Uniqueness**: Each injected element gets a unique ID per page
-- **Cleanup**: IDs are removed after elements are positioned to avoid conflicts
-
-### Example Use Cases
-
-**Term-specific branding with multiple elements:**
 ```yaml
-contentMapping:
-  "/2024/autumn-term/":
-    class-injection:
-      selector: "body"
-      className: "archive-page"
-    figure:
-      - selector: "main > header"
-        position: "afterend"
-        imageSrc: "/figures/icons/autumn-icon.png"
-        altText: "Autumn Term 2024"
-        className: "autumn-term-figure"
-      - selector: ".navbar-title"
-        position: "afterbegin"
-        imageSrc: "/figures/icons/autumn-favicon.png"
-        altText: "Autumn Term Favicon"
-        className: "autumn-favicon"
-  
-  "/2024/winter-term/":
-    class-injection:
-      selector: "body"
-      className: "archive-page"
-    figure:
-      - selector: "main > header"
-        position: "afterend"
-        imageSrc: "/figures/icons/winter-icon.png"
-        altText: "Winter Term 2024"
-        className: "winter-term-figure"
-      - selector: ".navbar-title"
-        position: "afterbegin"
-        imageSrc: "/figures/icons/winter-favicon.png"
-        altText: "Winter Term Favicon"
-        className: "winter-favicon"
+quarto-dynamic-injector:
+  contentMapping:
+    # Current term gets full branding
+    "/2024-2025/autumn-term/":
+      class-injection:
+        selector: "body"
+        className: "current-term"
+      figure:
+        - selector: "main > header"
+          position: "afterend"
+          imageSrc: "/figures/icons/autumn-2024.png"
+          altText: "Autumn Term 2024"
+          className: "term-banner"
 ```
 
-**Course-specific content:**
-```yaml
-contentMapping:
-  "/DS105/":
-    figure:
-      - selector: "main > header"
-        position: "afterend"
-        imageSrc: "/figures/icons/ds105-icon.png"
-        altText: "DS105 Course"
-        className: "ds105-figure"
-      - selector: ".sidebar"
-        position: "afterbegin"
-        imageSrc: "/figures/icons/ds105-sidebar.png"
-        altText: "DS105 Sidebar"
-        className: "ds105-sidebar"
-  
-  "/DS106/":
-    figure:
-      - selector: ".sidebar"
-        position: "afterbegin"
-        imageSrc: "/figures/icons/ds106-icon.png"
-        altText: "DS106 Course"
-        className: "ds106-figure"
-```
+## Configuration Options
+
+### Content Types
+
+- **`figure`**: Inject images with custom styling
+- **`class-injection`**: Add CSS classes to elements
+
+### Positioning
+
+- **`selector`**: CSS selector for where to inject content
+- **`position`**: Where relative to the target element:
+  - `"afterend"` (default): After the element
+  - `"beforebegin"`: Before the element
+  - `"afterbegin"`: Inside the element, at start
+  - `"beforeend"`: Inside the element, at end
+
+### Figure Properties
+
+- **`imageSrc`**: Path to the image
+- **`altText`**: Alt text for accessibility
+- **`className`**: CSS class for styling
+- **`style`**: Inline CSS styles
 
 ## How It Works
 
-1. **Build Time**: The Lua filter reads the YAML configuration during Quarto build
-2. **Path Matching**: Matches the current document's URL against configured paths
-3. **Content Injection**: Injects matching content into the HTML document
-4. **Runtime**: JavaScript handles precise positioning and styling
-
-## Benefits
-
-- ✅ **No CORS Issues**: Configuration injected at build time
-- ✅ **Version Controlled**: YAML configuration can be version controlled
-- ✅ **Reusable**: Extension can be used across multiple projects
-- ✅ **Simple CLI**: Easy archiving and management tools
-- ✅ **Clean Separation**: Configuration separate from code
-
-## Development
-
-To modify the extension:
-
-1. Edit `_extensions/quarto-dynamic-injector/quarto-dynamic-injector.lua`
-2. Update `_quarto.yml` for configuration changes
-3. Rebuild with `quarto render`
+1. **Build time**: The extension reads your configuration
+2. **Path matching**: Matches current page URL to your rules
+3. **Content injection**: Adds the matching content to your HTML
+4. **Runtime positioning**: JavaScript handles precise placement
 
 ## License
 
-MIT License - see LICENSE file for details. 
+MIT License 
